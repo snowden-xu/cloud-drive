@@ -1,0 +1,47 @@
+{
+  "name": "personal-cloud-drive",
+  "private": true,
+  "version": "0.1.0",
+  "description": "个人网盘系统 - Personal Cloud Drive System",
+  "scripts": {
+    "dev:client": "pnpm --filter @cloud-drive/client start",
+    "dev:server": "pnpm --filter @cloud-drive/server start:dev",
+    "build:client": "pnpm --filter @cloud-drive/client make",
+    "build:server": "pnpm --filter @cloud-drive/server build",
+    "build:shared": "pnpm --filter @cloud-drive/shared build",
+    "lint": "eslint 'packages/*/src/**/*.{ts,tsx}'",
+    "format": "prettier --write 'packages/*/src/**/*.{ts,tsx,json}'",
+    "test": "vitest --run",
+    "test:watch": "vitest",
+    "infra:up": "docker compose up -d",
+    "infra:down": "docker compose down"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "eslint": "^9.0.0",
+    "eslint-config-prettier": "^10.0.0",
+    "prettier": "^3.0.0",
+    "typescript": "^5.9.0",
+    "typescript-eslint": "^8.0.0",
+    "vitest": "^3.0.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@nestjs/core",
+      "@prisma/client",
+      "@prisma/engines",
+      "bcrypt",
+      "electron",
+      "electron-winstaller",
+      "esbuild",
+      "fs-xattr",
+      "macos-alias",
+      "msgpackr-extract",
+      "prisma"
+    ]
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "pnpm": ">=8.0.0"
+  }
+}

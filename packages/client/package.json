@@ -1,0 +1,43 @@
+{
+  "name": "@cloud-drive/client",
+  "version": "0.1.0",
+  "private": true,
+  "description": "个人网盘桌面客户端",
+  "main": ".webpack/main",
+  "scripts": {
+    "start": "electron-forge start",
+    "package": "electron-forge package",
+    "make": "electron-forge make",
+    "test": "vitest --run"
+  },
+  "dependencies": {
+    "@cloud-drive/shared": "workspace:*",
+    "antd": "^5.0.0",
+    "axios": "^1.0.0",
+    "electron-squirrel-startup": "^1.0.0",
+    "electron-store": "^10.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-router-dom": "^6.0.0",
+    "zustand": "^5.0.0"
+  },
+  "devDependencies": {
+    "@electron-forge/cli": "^7.0.0",
+    "@electron-forge/maker-deb": "^7.0.0",
+    "@electron-forge/maker-dmg": "^7.0.0",
+    "@electron-forge/maker-squirrel": "^7.0.0",
+    "@electron-forge/maker-zip": "^7.0.0",
+    "@electron-forge/plugin-auto-unpack-natives": "^7.0.0",
+    "@electron-forge/plugin-webpack": "^7.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vercel/webpack-asset-relocator-loader": "^1.10.0",
+    "css-loader": "^7.0.0",
+    "electron": "^33.0.0",
+    "fork-ts-checker-webpack-plugin": "^9.0.0",
+    "node-loader": "^2.0.0",
+    "style-loader": "^4.0.0",
+    "ts-loader": "^9.0.0",
+    "typescript": "^5.9.0"
+  }
+}

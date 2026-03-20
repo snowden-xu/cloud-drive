@@ -1,0 +1,1737 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Snowden Disk - 个人网盘</title>
+<style>
+/* ===== Design Tokens ===== */
+:root {
+  --color-primary: #1677ff;
+  --color-primary-hover: #4096ff;
+  --color-primary-active: #0958d9;
+  --color-primary-bg: #e6f4ff;
+  --color-primary-bg-hover: #bae0ff;
+  --color-primary-border: #91caff;
+  --color-success: #52c41a;
+  --color-success-bg: #f6ffed;
+  --color-warning: #faad14;
+  --color-warning-bg: #fffbe6;
+  --color-error: #ff4d4f;
+  --color-error-hover: #ff7875;
+  --color-error-bg: #fff2f0;
+  --color-text: rgba(0,0,0,0.88);
+  --color-text-2: rgba(0,0,0,0.65);
+  --color-text-3: rgba(0,0,0,0.45);
+  --color-text-4: rgba(0,0,0,0.25);
+  --color-bg: #ffffff;
+  --color-bg-layout: #f7f8fa;
+  --color-bg-elevated: #ffffff;
+  --color-bg-mask: rgba(0,0,0,0.45);
+  --color-border: #e5e7eb;
+  --color-border-light: #f0f0f0;
+  --color-fill: rgba(0,0,0,0.04);
+  --color-fill-2: rgba(0,0,0,0.06);
+  --radius: 8px;
+  --radius-sm: 6px;
+  --radius-xs: 4px;
+  --radius-lg: 12px;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow: 0 4px 12px rgba(0,0,0,0.08);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+  --font-size: 14px;
+  --font-size-sm: 12px;
+  --font-size-lg: 16px;
+  --font-size-xl: 20px;
+  --line-height: 1.5714;
+  --duration: 0.2s;
+  --duration-slow: 0.3s;
+  --ease: cubic-bezier(0.645, 0.045, 0.355, 1);
+  --sider-width: 248px;
+  --header-height: 60px;
+}
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  font-size: var(--font-size); line-height: var(--line-height); color: var(--color-text);
+  background: var(--color-bg-layout); height: 100vh; overflow: hidden;
+  -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+}
+</style>
+<style>
+/* ===== Login Page ===== */
+.login-page {
+  display: flex; align-items: center; justify-content: center; height: 100vh;
+  background: linear-gradient(135deg, #e6f4ff 0%, #f7f8fa 50%, #e6f4ff 100%);
+}
+.login-card {
+  width: 400px; background: #fff; border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);
+  padding: 48px 40px; text-align: center;
+}
+.login-logo { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 8px; }
+.login-logo-icon {
+  width: 44px; height: 44px; background: linear-gradient(135deg, #1677ff, #4096ff);
+  border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #fff;
+}
+.login-logo-text { font-size: 24px; font-weight: 700; color: var(--color-text); }
+.login-subtitle { font-size: 13px; color: var(--color-text-3); margin-bottom: 32px; }
+.login-tabs { display: flex; gap: 0; margin-bottom: 24px; border-bottom: 1px solid var(--color-border-light); }
+.login-tab {
+  flex: 1; padding: 10px 0; font-size: 14px; font-weight: 500; color: var(--color-text-3);
+  cursor: pointer; border-bottom: 2px solid transparent; transition: all var(--duration);
+  background: none; border-top: none; border-left: none; border-right: none;
+}
+.login-tab.active { color: var(--color-primary); border-bottom-color: var(--color-primary); }
+.login-form { display: flex; flex-direction: column; gap: 16px; }
+.form-input {
+  width: 100%; height: 42px; padding: 0 14px; border: 1px solid var(--color-border);
+  border-radius: var(--radius); font-size: 14px; color: var(--color-text); outline: none;
+  transition: all var(--duration); background: #fff;
+}
+.form-input:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(22,119,255,0.08); }
+.form-input::placeholder { color: var(--color-text-4); }
+.form-input.error { border-color: var(--color-error); }
+.form-options { display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
+.form-checkbox { display: flex; align-items: center; gap: 6px; color: var(--color-text-2); cursor: pointer; }
+.form-checkbox input { accent-color: var(--color-primary); }
+.login-btn {
+  width: 100%; height: 42px; background: linear-gradient(135deg, #1677ff, #4096ff);
+  border: none; border-radius: var(--radius); color: #fff; font-size: 15px; font-weight: 600;
+  cursor: pointer; transition: all var(--duration); box-shadow: 0 2px 8px rgba(22,119,255,0.3);
+}
+.login-btn:hover { background: linear-gradient(135deg, #4096ff, #69b1ff); box-shadow: 0 4px 12px rgba(22,119,255,0.35); }
+.login-btn:active { transform: scale(0.98); }
+.register-fields { display: none; }
+.register-fields.show { display: contents; }
+.login-error { display: none; font-size: 12px; color: var(--color-error); text-align: left; margin-top: -8px; }
+.login-error.show { display: block; }
+</style>
+<style>
+/* ===== Layout & Sidebar ===== */
+.layout { display: none; height: 100vh; }
+.layout.show { display: flex; }
+.sidebar {
+  width: var(--sider-width); background: #edf0f5; border-right: none;
+  display: flex; flex-direction: column; flex-shrink: 0; position: relative; z-index: 10; overflow: hidden;
+}
+.traffic-lights { display: flex; align-items: center; gap: 8px; padding: 18px 20px 16px; }
+.traffic-dot { width: 12px; height: 12px; border-radius: 50%; cursor: pointer; position: relative; transition: opacity var(--duration); }
+.traffic-dot.close { background: #ff5f57; }
+.traffic-dot.minimize { background: #febc2e; }
+.traffic-dot.maximize { background: #28c840; }
+.traffic-dot:hover { opacity: 0.8; }
+.traffic-dot svg { position: absolute; inset: 0; margin: auto; opacity: 0; transition: opacity var(--duration); color: rgba(0,0,0,0.5); }
+.traffic-lights:hover .traffic-dot svg { opacity: 1; }
+.sidebar-logo { padding: 4px 16px 16px; display: flex; align-items: center; gap: 10px; }
+.sidebar-logo-icon {
+  width: 36px; height: 36px; background: linear-gradient(135deg, #1677ff, #4096ff);
+  border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #fff;
+}
+.sidebar-logo-text { font-size: 20px; font-weight: 700; color: var(--color-text); letter-spacing: -0.3px; }
+.sidebar-search { padding: 0 16px 12px; }
+.sidebar-search .search-box { width: 100%; }
+.sidebar-search .search-box input {
+  background: rgba(255,255,255,0.7); border: 1px solid rgba(0,0,0,0.08);
+  width: 100%; height: 36px; padding: 0 12px 0 34px; border-radius: var(--radius-sm);
+  font-size: 13px; color: var(--color-text); outline: none; transition: all var(--duration);
+}
+.sidebar-search .search-box input:hover { background: rgba(255,255,255,0.9); }
+.sidebar-search .search-box input:focus { border-color: var(--color-primary); background: #fff; box-shadow: 0 0 0 3px rgba(22,119,255,0.08); }
+.sidebar-search .search-box input::placeholder { color: var(--color-text-3); }
+.search-box { position: relative; }
+.search-box .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--color-text-3); pointer-events: none; }
+.sidebar-menu { flex: 1; padding: 4px 16px; overflow-y: auto; }
+.menu-item {
+  display: flex; align-items: center; gap: 10px; height: 42px; padding: 0 12px;
+  border-radius: var(--radius-sm); cursor: pointer; transition: all var(--duration) var(--ease);
+  font-size: 15px; color: var(--color-text-2); position: relative;
+}
+.menu-item:hover { background: rgba(255,255,255,0.5); color: var(--color-primary); }
+.menu-item.active { background: rgba(255,255,255,0.6); color: var(--color-primary); font-weight: 600; }
+.menu-item.active::before {
+  content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+  width: 3px; height: 18px; border-radius: 2px; background: var(--color-primary);
+}
+.menu-icon { width: 22px; height: 22px; flex-shrink: 0; display: flex; align-items: center; color: currentColor; }
+.menu-divider { margin: 20px 12px 8px; font-size: var(--font-size-sm); color: var(--color-text-3); font-weight: 500; }
+.sidebar-storage { padding: 16px 24px; }
+.storage-label { font-size: var(--font-size-sm); color: var(--color-text-3); margin-bottom: 10px; font-weight: 600; letter-spacing: 0.3px; text-transform: uppercase; }
+.storage-bar { height: 4px; background: rgba(0,0,0,0.06); border-radius: 100px; overflow: hidden; }
+.storage-bar-inner { height: 100%; width: 35%; background: linear-gradient(90deg, #1677ff, #4096ff); border-radius: 100px; transition: width var(--duration-slow); }
+.storage-bar-inner.warning { background: linear-gradient(90deg, #faad14, #ffc53d); }
+.storage-bar-inner.danger { background: linear-gradient(90deg, #ff4d4f, #ff7875); }
+.storage-text { display: flex; justify-content: space-between; font-size: var(--font-size-sm); color: var(--color-text-3); margin-top: 8px; }
+.storage-text strong { color: var(--color-text); font-weight: 500; }
+.storage-detail-link { font-size: 11px; color: var(--color-primary); cursor: pointer; margin-top: 6px; display: inline-block; }
+.storage-detail-link:hover { text-decoration: underline; }
+.storage-warning { display: none; font-size: 11px; color: var(--color-warning); margin-top: 4px; }
+.storage-warning.show { display: block; }
+.sidebar-user { padding: 14px 24px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: background var(--duration); }
+.sidebar-user:hover { background: rgba(255,255,255,0.4); }
+.avatar {
+  width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, #1677ff, #4096ff);
+  display: flex; align-items: center; justify-content: center; color: #fff; font-size: 13px; font-weight: 600; flex-shrink: 0;
+}
+.user-name { font-size: 13px; color: var(--color-text); font-weight: 500; }
+.user-email { font-size: 11px; color: var(--color-text-3); margin-top: 1px; }
+</style>
+<style>
+/* ===== Main Content ===== */
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--color-bg); }
+.header {
+  height: var(--header-height); padding: 0 24px; display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--color-border-light); background: var(--color-bg); flex-shrink: 0;
+}
+.header-left { display: flex; align-items: center; gap: 16px; }
+.batch-actions { display: none; align-items: center; gap: 8px; }
+.batch-actions.show { display: flex; }
+.default-actions { display: flex; align-items: center; gap: 8px; }
+.default-actions.hide { display: none; }
+.batch-count { font-size: 13px; color: var(--color-text-2); margin-right: 4px; }
+.header-right { display: flex; align-items: center; gap: 8px; }
+/* ===== Toolbar ===== */
+.toolbar { padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.breadcrumb { display: flex; align-items: center; gap: 4px; font-size: 14px; flex: 1; min-width: 0; }
+.breadcrumb-item { color: var(--color-text-3); cursor: pointer; white-space: nowrap; transition: color var(--duration); }
+.breadcrumb-item:hover { color: var(--color-primary); }
+.breadcrumb-item.current { color: var(--color-text); font-weight: 600; cursor: default; }
+.breadcrumb-sep { color: var(--color-text-4); font-size: 12px; }
+.toolbar-right { display: flex; align-items: center; gap: 8px; }
+</style>
+<style>
+/* ===== Buttons ===== */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 14px;
+  border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; cursor: pointer;
+  transition: all var(--duration); border: 1px solid var(--color-border); background: #fff; color: var(--color-text);
+  white-space: nowrap;
+}
+.btn:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.btn-primary { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
+.btn-primary:hover { background: var(--color-primary-hover); border-color: var(--color-primary-hover); color: #fff; }
+.btn-danger { color: var(--color-error); border-color: var(--color-error); }
+.btn-danger:hover { background: var(--color-error-bg); }
+.btn-text { border: none; background: none; padding: 0 8px; color: var(--color-text-2); }
+.btn-text:hover { color: var(--color-primary); background: var(--color-fill); }
+.btn-icon {
+  width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;
+  border-radius: var(--radius-sm); border: 1px solid transparent; background: none; cursor: pointer;
+  color: var(--color-text-3); transition: all var(--duration);
+}
+.btn-icon:hover { background: var(--color-fill); color: var(--color-text); }
+/* ===== Sort Dropdown ===== */
+.sort-dropdown { position: relative; }
+.sort-menu {
+  position: absolute; top: 100%; right: 0; margin-top: 4px; min-width: 160px;
+  background: var(--color-bg-elevated); border-radius: var(--radius); box-shadow: var(--shadow-lg);
+  border: 1px solid var(--color-border-light); padding: 4px; z-index: 100; display: none;
+}
+.sort-menu.show { display: block; }
+.sort-item {
+  display: flex; align-items: center; justify-content: space-between; padding: 8px 12px;
+  border-radius: var(--radius-xs); cursor: pointer; font-size: 13px; color: var(--color-text);
+  transition: background var(--duration);
+}
+.sort-item:hover { background: var(--color-fill); }
+.sort-item.active { color: var(--color-primary); font-weight: 500; }
+.sort-item .sort-check { opacity: 0; color: var(--color-primary); }
+.sort-item.active .sort-check { opacity: 1; }
+</style>
+<style>
+/* ===== File Table ===== */
+.file-table-wrap { flex: 1; overflow-y: auto; padding: 0 24px 24px; }
+.file-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.file-table th {
+  position: sticky; top: 0; background: var(--color-bg); padding: 10px 12px; text-align: left;
+  font-size: var(--font-size-sm); font-weight: 500; color: var(--color-text-3);
+  border-bottom: 1px solid var(--color-border-light); z-index: 5; white-space: nowrap;
+}
+.file-table td { padding: 10px 12px; font-size: 13px; color: var(--color-text-2); border-bottom: 1px solid var(--color-border-light); }
+.file-table .col-check { width: 44px; }
+.file-table .col-name { width: auto; }
+.file-table .col-size { width: 100px; }
+.file-table .col-time { width: 160px; }
+.file-table .col-actions { width: 120px; }
+.file-table tbody tr { transition: background var(--duration); cursor: default; }
+.file-table tbody tr:hover { background: var(--color-fill); }
+.file-table tbody tr.selected { background: var(--color-primary-bg); }
+.file-name-cell { display: flex; align-items: center; gap: 10px; }
+.file-icon { width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.file-icon.folder { background: #fff8e6; color: #faad14; }
+.file-icon.image { background: #f0f5ff; color: #597ef7; }
+.file-icon.doc { background: #e6fffb; color: #13c2c2; }
+.file-icon.pdf { background: #fff1f0; color: #ff4d4f; }
+.file-icon.other { background: var(--color-fill); color: var(--color-text-3); }
+.file-name-text { font-weight: 500; color: var(--color-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.file-name-text.clickable { cursor: pointer; }
+.file-name-text.clickable:hover { color: var(--color-primary); }
+.row-actions { display: none; gap: 4px; }
+tr:hover .row-actions { display: flex; }
+.row-action-btn {
+  width: 28px; height: 28px; border: none; background: none; border-radius: var(--radius-xs);
+  cursor: pointer; color: var(--color-text-3); display: flex; align-items: center; justify-content: center;
+  transition: all var(--duration); font-size: 14px;
+}
+.row-action-btn:hover { background: var(--color-fill-2); color: var(--color-primary); }
+.checkbox { width: 16px; height: 16px; accent-color: var(--color-primary); cursor: pointer; }
+.empty-state { display: none; flex-direction: column; align-items: center; justify-content: center; padding: 80px 0; color: var(--color-text-3); }
+.empty-state.show { display: flex; }
+.empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.4; }
+.empty-text { font-size: 14px; }
+</style>
+<style>
+/* ===== Context Menu ===== */
+.context-menu {
+  position: fixed; min-width: 180px; background: var(--color-bg-elevated); border-radius: var(--radius);
+  box-shadow: var(--shadow-lg); border: 1px solid var(--color-border-light); padding: 4px; z-index: 1000; display: none;
+}
+.context-menu.show { display: block; }
+.ctx-item {
+  display: flex; align-items: center; justify-content: space-between; padding: 8px 12px;
+  border-radius: var(--radius-xs); cursor: pointer; font-size: 13px; color: var(--color-text);
+  transition: background var(--duration); gap: 24px;
+}
+.ctx-item:hover { background: var(--color-fill); }
+.ctx-item.danger { color: var(--color-error); }
+.ctx-item.danger:hover { background: var(--color-error-bg); }
+.ctx-shortcut { font-size: 11px; color: var(--color-text-4); }
+.ctx-divider { height: 1px; background: var(--color-border-light); margin: 4px 0; }
+/* ===== Transfer Panel ===== */
+.transfer-panel {
+  position: fixed; bottom: 0; right: 24px; width: 380px; background: var(--color-bg-elevated);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0; box-shadow: var(--shadow-lg);
+  border: 1px solid var(--color-border-light); border-bottom: none; z-index: 200; display: none;
+  flex-direction: column; max-height: 420px;
+}
+.transfer-panel.show { display: flex; }
+.transfer-header {
+  display: flex; align-items: center; justify-content: space-between; padding: 14px 16px;
+  border-bottom: 1px solid var(--color-border-light); cursor: pointer; flex-shrink: 0;
+}
+.transfer-title { font-size: 14px; font-weight: 600; }
+.transfer-header-actions { display: flex; gap: 4px; }
+.transfer-body { flex: 1; overflow-y: auto; }
+.transfer-body.minimized { display: none; }
+.transfer-item {
+  display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+  border-bottom: 1px solid var(--color-border-light); transition: background var(--duration);
+}
+.transfer-item:hover { background: var(--color-fill); }
+.transfer-item-icon { font-size: 20px; flex-shrink: 0; }
+.transfer-item-info { flex: 1; min-width: 0; }
+.transfer-item-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.transfer-item-meta { font-size: 11px; color: var(--color-text-3); margin-top: 2px; }
+.transfer-progress { height: 3px; background: var(--color-fill-2); border-radius: 100px; margin-top: 6px; overflow: hidden; }
+.transfer-progress-bar { height: 100%; background: var(--color-primary); border-radius: 100px; transition: width 0.3s; }
+.transfer-progress-bar.error { background: var(--color-error); }
+.transfer-item-actions { display: flex; gap: 4px; flex-shrink: 0; }
+.transfer-action-btn {
+  width: 26px; height: 26px; border: none; background: none; border-radius: var(--radius-xs);
+  cursor: pointer; color: var(--color-text-3); display: flex; align-items: center; justify-content: center;
+  transition: all var(--duration); font-size: 13px;
+}
+.transfer-action-btn:hover { background: var(--color-fill-2); color: var(--color-primary); }
+.transfer-action-btn.retry { color: var(--color-warning); }
+.transfer-action-btn.retry:hover { color: var(--color-primary); }
+.transfer-status { font-size: 11px; margin-top: 2px; }
+.transfer-status.error { color: var(--color-error); }
+.transfer-status.success { color: var(--color-success); }
+</style>
+<style>
+/* ===== Modals & Dialogs ===== */
+.modal-overlay {
+  position: fixed; inset: 0; background: var(--color-bg-mask); z-index: 500; display: none;
+  align-items: center; justify-content: center;
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: var(--color-bg-elevated); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);
+  width: 480px; max-height: 80vh; overflow-y: auto; padding: 24px;
+}
+.modal-sm { width: 400px; }
+.modal-lg { width: 640px; }
+.modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.modal-title { font-size: 16px; font-weight: 600; }
+.modal-close {
+  width: 28px; height: 28px; border: none; background: none; border-radius: var(--radius-xs);
+  cursor: pointer; color: var(--color-text-3); display: flex; align-items: center; justify-content: center;
+  transition: all var(--duration); font-size: 16px;
+}
+.modal-close:hover { background: var(--color-fill); color: var(--color-text); }
+.modal-body { margin-bottom: 24px; }
+.modal-footer { display: flex; justify-content: flex-end; gap: 8px; }
+/* ===== Delete Confirm Dialog ===== */
+.delete-dialog .warning-icon { font-size: 48px; text-align: center; margin-bottom: 16px; }
+.delete-dialog .warning-text { text-align: center; font-size: 14px; color: var(--color-text); margin-bottom: 8px; }
+.delete-dialog .warning-sub { text-align: center; font-size: 13px; color: var(--color-text-3); }
+/* ===== File Detail Panel ===== */
+.detail-panel {
+  position: fixed; top: 0; right: -380px; width: 380px; height: 100vh; background: var(--color-bg-elevated);
+  box-shadow: -4px 0 16px rgba(0,0,0,0.08); z-index: 300; transition: right var(--duration-slow) var(--ease);
+  display: flex; flex-direction: column;
+}
+.detail-panel.show { right: 0; }
+.detail-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border-bottom: 1px solid var(--color-border-light); }
+.detail-title { font-size: 15px; font-weight: 600; }
+.detail-body { flex: 1; overflow-y: auto; padding: 24px; }
+.detail-preview { width: 100%; height: 200px; background: var(--color-fill); border-radius: var(--radius); display: flex; align-items: center; justify-content: center; margin-bottom: 24px; }
+.detail-preview svg { width: 64px; height: 64px; }
+.detail-info-list { display: flex; flex-direction: column; gap: 16px; }
+.detail-info-item { display: flex; justify-content: space-between; font-size: 13px; }
+.detail-info-label { color: var(--color-text-3); }
+.detail-info-value { color: var(--color-text); font-weight: 500; max-width: 200px; word-break: break-all; text-align: right; }
+.detail-actions { padding: 16px 24px; border-top: 1px solid var(--color-border-light); display: flex; gap: 8px; }
+</style>
+<style>
+/* ===== Preview Modal ===== */
+.preview-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 600; display: none;
+  align-items: center; justify-content: center; flex-direction: column;
+}
+.preview-overlay.show { display: flex; }
+.preview-header {
+  position: absolute; top: 0; left: 0; right: 0; padding: 16px 24px;
+  display: flex; align-items: center; justify-content: space-between; color: #fff;
+}
+.preview-filename { font-size: 14px; font-weight: 500; }
+.preview-close { width: 36px; height: 36px; border: none; background: rgba(255,255,255,0.1); border-radius: 50%; cursor: pointer; color: #fff; font-size: 18px; display: flex; align-items: center; justify-content: center; transition: background var(--duration); }
+.preview-close:hover { background: rgba(255,255,255,0.2); }
+.preview-content { max-width: 90vw; max-height: 80vh; display: flex; align-items: center; justify-content: center; }
+.preview-content img { max-width: 100%; max-height: 80vh; border-radius: var(--radius); }
+.preview-content .doc-preview { width: 700px; max-height: 80vh; background: #fff; border-radius: var(--radius); padding: 40px; overflow-y: auto; font-size: 14px; line-height: 1.8; }
+.preview-unsupported { color: #fff; text-align: center; }
+.preview-unsupported .unsupported-icon { font-size: 64px; margin-bottom: 16px; opacity: 0.5; }
+.preview-unsupported p { margin-bottom: 16px; }
+/* ===== Storage Distribution Modal ===== */
+.storage-modal .storage-chart { display: flex; gap: 8px; height: 24px; border-radius: 100px; overflow: hidden; margin-bottom: 24px; }
+.storage-modal .chart-bar { transition: width var(--duration-slow); }
+.storage-modal .chart-bar.images { background: #597ef7; }
+.storage-modal .chart-bar.videos { background: #ff7a45; }
+.storage-modal .chart-bar.docs { background: #36cfc9; }
+.storage-modal .chart-bar.others { background: #bfbfbf; }
+.storage-legend { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.legend-item { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.legend-size { margin-left: auto; color: var(--color-text-3); font-size: 12px; }
+/* ===== User Settings Panel ===== */
+.settings-section { margin-bottom: 24px; }
+.settings-section:last-child { margin-bottom: 0; }
+.settings-label { font-size: 13px; font-weight: 500; color: var(--color-text-2); margin-bottom: 8px; }
+.settings-avatar { display: flex; align-items: center; gap: 16px; }
+.settings-avatar .avatar-lg {
+  width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, #1677ff, #4096ff);
+  display: flex; align-items: center; justify-content: center; color: #fff; font-size: 24px; font-weight: 600;
+}
+.settings-input { width: 100%; }
+</style>
+<style>
+/* ===== Search Results ===== */
+.search-results-header { padding: 12px 24px; display: none; align-items: center; gap: 8px; border-bottom: 1px solid var(--color-border-light); }
+.search-results-header.show { display: flex; }
+.search-keyword { font-weight: 600; color: var(--color-primary); }
+.search-count { color: var(--color-text-3); font-size: 13px; }
+.search-close-btn { margin-left: auto; }
+.file-path { font-size: 11px; color: var(--color-text-3); margin-top: 2px; }
+/* ===== Toast ===== */
+.toast-container { position: fixed; top: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+.toast {
+  display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: var(--radius);
+  background: var(--color-bg-elevated); box-shadow: var(--shadow-lg); border: 1px solid var(--color-border-light);
+  font-size: 13px; min-width: 280px; max-width: 400px; animation: toastIn 0.3s var(--ease);
+}
+.toast.success { border-left: 3px solid var(--color-success); }
+.toast.error { border-left: 3px solid var(--color-error); }
+.toast.warning { border-left: 3px solid var(--color-warning); }
+.toast-icon { font-size: 18px; flex-shrink: 0; }
+.toast-message { flex: 1; }
+.toast-close { border: none; background: none; cursor: pointer; color: var(--color-text-4); font-size: 14px; padding: 2px; }
+@keyframes toastIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+/* ===== Drag Overlay ===== */
+.drag-overlay {
+  position: fixed; inset: 0; background: rgba(22,119,255,0.06); z-index: 9998; display: none;
+  align-items: center; justify-content: center; border: 3px dashed var(--color-primary);
+}
+.drag-overlay.show { display: flex; }
+.drag-content { text-align: center; color: var(--color-primary); }
+.drag-content .drag-icon { font-size: 48px; margin-bottom: 12px; }
+.drag-content p { font-size: 16px; font-weight: 500; }
+/* ===== Scrollbar ===== */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); border-radius: 100px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.2); }
+/* ===== Move/Copy Modal ===== */
+.folder-tree { max-height: 300px; overflow-y: auto; border: 1px solid var(--color-border-light); border-radius: var(--radius); padding: 8px; }
+.tree-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-xs); cursor: pointer; font-size: 13px; transition: background var(--duration); }
+.tree-item:hover { background: var(--color-fill); }
+.tree-item.selected { background: var(--color-primary-bg); color: var(--color-primary); }
+.tree-item-icon { font-size: 16px; }
+.tree-indent { padding-left: 24px; }
+/* ===== Transfer Page ===== */
+.transfer-page { display: none; flex: 1; flex-direction: column; overflow: hidden; }
+.transfer-page.show { display: flex; }
+.transfer-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--color-border-light); padding: 0 24px; flex-shrink: 0; }
+.transfer-tab {
+  padding: 12px 20px; font-size: 14px; font-weight: 500; color: var(--color-text-3);
+  cursor: pointer; border-bottom: 2px solid transparent; transition: all var(--duration);
+  background: none; border-top: none; border-left: none; border-right: none;
+}
+.transfer-tab.active { color: var(--color-text); border-bottom-color: var(--color-text); }
+.transfer-tab:hover { color: var(--color-text-2); }
+.transfer-list { flex: 1; overflow-y: auto; padding: 0; }
+.transfer-list-item {
+  display: flex; align-items: center; gap: 12px; padding: 14px 24px;
+  border-bottom: 1px solid var(--color-border-light); transition: background var(--duration);
+}
+.transfer-list-item:hover { background: var(--color-fill); }
+.transfer-list-icon { font-size: 18px; flex-shrink: 0; width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; }
+.transfer-list-icon.upload-icon { background: var(--color-primary-bg); color: var(--color-primary); }
+.transfer-list-icon.download-icon { background: #f6ffed; color: var(--color-success); }
+.transfer-list-info { flex: 1; min-width: 0; }
+.transfer-list-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.transfer-list-meta { font-size: 11px; color: var(--color-text-3); margin-top: 2px; }
+.transfer-list-progress { height: 3px; background: var(--color-fill-2); border-radius: 100px; margin-top: 6px; overflow: hidden; }
+.transfer-list-progress-bar { height: 100%; border-radius: 100px; transition: width 0.3s; }
+.transfer-list-progress-bar.active { background: var(--color-primary); }
+.transfer-list-progress-bar.done { background: var(--color-success); }
+.transfer-list-progress-bar.error { background: var(--color-error); }
+.transfer-list-actions { display: flex; gap: 4px; flex-shrink: 0; }
+.transfer-list-status { font-size: 12px; color: var(--color-text-3); flex-shrink: 0; min-width: 60px; text-align: right; }
+.transfer-list-status.error { color: var(--color-error); }
+.transfer-list-status.done { color: var(--color-success); }
+.transfer-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 80px 0; color: var(--color-text-3); }
+.transfer-empty-icon { margin-bottom: 12px; opacity: 0.3; }
+/* ===== Transfer Table (reuses .file-table) ===== */
+.transfer-table-wrap { flex: 1; overflow-y: auto; padding: 0 24px 24px; }
+.file-table .col-status { width: 120px; }
+.transfer-table-status-text { font-size: 12px; flex-shrink: 0; }
+.transfer-table-status-text.error { color: var(--color-error); }
+.transfer-table-status-text.done { color: var(--color-success); }
+.transfer-table-status-text.active { color: var(--color-primary); }
+/* ===== Transfer Batch Actions ===== */
+.transfer-batch-bar {
+  display: flex; align-items: center; gap: 8px; padding: 8px 24px;
+  border-bottom: 1px solid var(--color-border-light); flex-shrink: 0;
+}
+.transfer-batch-bar .btn { opacity: 0.4; pointer-events: none; }
+.transfer-batch-bar.has-selection .btn { opacity: 1; pointer-events: auto; }
+</style>
+</head>
+<body>
+
+<!-- ===== Login Page ===== -->
+<div class="login-page" id="loginPage">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
+      </div>
+      <span class="login-logo-text">Snowden Disk</span>
+    </div>
+    <p class="login-subtitle">安全、高效的个人云存储</p>
+    <div class="login-tabs">
+      <button class="login-tab active" data-tab="login">登录</button>
+      <button class="login-tab" data-tab="register">注册</button>
+    </div>
+    <form class="login-form" id="loginForm" onsubmit="return false;">
+      <input class="form-input" type="text" id="loginUsername" placeholder="用户名" autocomplete="username">
+      <div class="register-fields" id="registerEmail">
+        <input class="form-input" type="email" placeholder="邮箱地址" autocomplete="email">
+      </div>
+      <input class="form-input" type="password" id="loginPassword" placeholder="密码" autocomplete="current-password">
+      <div class="register-fields" id="registerConfirm">
+        <input class="form-input" type="password" placeholder="确认密码" autocomplete="new-password">
+      </div>
+      <div class="login-error" id="loginError">用户名或密码错误</div>
+      <div class="form-options" id="loginOptions">
+        <label class="form-checkbox"><input type="checkbox" id="rememberPwd"> 记住密码</label>
+        <label class="form-checkbox"><input type="checkbox" id="autoLogin"> 自动登录</label>
+      </div>
+      <button class="login-btn" id="loginBtn" type="submit">登录</button>
+    </form>
+  </div>
+</div>
+<!-- ===== Main Layout ===== -->
+<div class="layout" id="mainLayout">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="traffic-lights">
+      <div class="traffic-dot close"><svg width="6" height="6" viewBox="0 0 6 6"><path d="M0 0L6 6M6 0L0 6" stroke="currentColor" stroke-width="1.2"/></svg></div>
+      <div class="traffic-dot minimize"><svg width="8" height="1" viewBox="0 0 8 1"><line x1="0" y1="0.5" x2="8" y2="0.5" stroke="currentColor" stroke-width="1.2"/></svg></div>
+      <div class="traffic-dot maximize"><svg width="8" height="8" viewBox="0 0 8 8"><path d="M0 2.5A2.5 2.5 0 0 1 2.5 0H5.5A2.5 2.5 0 0 1 8 2.5V5.5A2.5 2.5 0 0 1 5.5 8H2.5A2.5 2.5 0 0 1 0 5.5Z" fill="currentColor" opacity="0.5"/></svg></div>
+    </div>
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
+      </div>
+      <span class="sidebar-logo-text">Snowden Disk</span>
+    </div>
+    <div class="sidebar-search">
+      <div class="search-box">
+        <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="searchInput" placeholder="搜索文件…" autocomplete="off">
+      </div>
+    </div>
+    <nav class="sidebar-menu">
+      <div class="menu-divider">文件管理</div>
+      <div class="menu-item active" data-page="all">
+        <span class="menu-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></span>
+        全部文件
+      </div>
+      <div class="menu-divider">传输列表</div>
+      <div class="menu-item" data-page="upload-list" id="menuUploadList">
+        <span class="menu-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></span>
+        上传
+        <span style="margin-left:auto; font-size:11px; color:var(--color-text-3); background:var(--color-fill-2); padding:1px 6px; border-radius:10px;" id="uploadBadge">4</span>
+      </div>
+      <div class="menu-item" data-page="download-list" id="menuDownloadList">
+        <span class="menu-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></span>
+        下载
+        <span style="margin-left:auto; font-size:11px; color:var(--color-text-3); background:var(--color-fill-2); padding:1px 6px; border-radius:10px;" id="downloadBadge">2</span>
+      </div>
+    </nav>
+    <div class="sidebar-storage">
+      <div class="storage-label">存储空间</div>
+      <div class="storage-bar"><div class="storage-bar-inner" id="storageBar" style="width:35%"></div></div>
+      <div class="storage-text"><span><strong id="storageUsed">3.5 GB</strong> / 10 GB</span><span id="storagePercent">35%</span></div>
+      <div class="storage-warning" id="storageWarning">⚠ 存储空间即将用尽，请清理文件</div>
+    </div>
+    <div class="sidebar-user" id="sidebarUser">
+      <div class="avatar" id="userAvatar">U</div>
+      <div>
+        <div class="user-name" id="userName">User</div>
+        <div class="user-email" id="userEmail">user@example.com</div>
+      </div>
+    </div>
+  </aside>
+  <!-- Main Content -->
+  <div class="main">
+    <!-- Header with batch actions -->
+    <div class="header">
+      <div class="header-left">
+        <div class="default-actions" id="defaultActions">
+          <div class="upload-dropdown" style="position:relative;">
+            <button class="btn btn-primary" id="uploadBtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> 上传 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-left:2px;"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="upload-menu" id="uploadMenu" style="display:none; position:absolute; top:100%; left:0; margin-top:4px; min-width:140px; background:var(--color-bg-elevated); border-radius:var(--radius); box-shadow:var(--shadow-lg); border:1px solid var(--color-border-light); padding:4px; z-index:100;">
+              <div id="uploadFileBtn" style="display:flex; align-items:center; gap:8px; padding:8px 12px; border-radius:var(--radius-xs); cursor:pointer; font-size:13px; color:var(--color-text); transition:background 0.2s;" onmouseover="this.style.background='var(--color-fill)'" onmouseout="this.style.background=''"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span>上传文件</span></div>
+              <div id="uploadFolderBtn" style="display:flex; align-items:center; gap:8px; padding:8px 12px; border-radius:var(--radius-xs); cursor:pointer; font-size:13px; color:var(--color-text); transition:background 0.2s;" onmouseover="this.style.background='var(--color-fill)'" onmouseout="this.style.background=''"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg><span>上传文件夹</span></div>
+            </div>
+          </div>
+          <button class="btn" id="newFolderBtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg> 新建文件夹</button>
+        </div>
+        <div class="batch-actions" id="batchActions">
+          <button class="btn btn-primary" onclick="handleBatchDownload()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> 下载</button>
+          <button class="btn" onclick="handleBatchMove()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg> 移动</button>
+          <button class="btn" onclick="handleBatchCopy()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> 复制</button>
+          <button class="btn btn-danger" onclick="handleBatchDelete()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> 删除</button>
+        </div>
+      </div>
+      <div class="header-right">
+        <button class="btn-icon" id="transferBtn" title="传输列表"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"/></svg></button>
+      </div>
+    </div>
+
+    <!-- Search Results Header -->
+    <div class="search-results-header" id="searchResultsHeader">
+      <span>搜索结果：</span>
+      <span class="search-keyword" id="searchKeyword"></span>
+      <span class="search-count" id="searchResultCount"></span>
+      <button class="btn btn-text search-close-btn" onclick="closeSearch()">✕ 关闭搜索</button>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar" id="toolbar">
+      <div class="breadcrumb" id="breadcrumb">
+        <span class="breadcrumb-item current" data-path="/">全部文件</span>
+      </div>
+      <div class="toolbar-right">
+        <div class="sort-dropdown">
+          <button class="btn" id="sortBtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="14" y2="12"/><line x1="4" y1="18" x2="8" y2="18"/></svg> 排序</button>
+          <div class="sort-menu" id="sortMenu">
+            <div class="sort-item active" data-sort="time"><span>修改时间</span><span class="sort-check">✓</span></div>
+            <div class="sort-item" data-sort="name"><span>文件名</span><span class="sort-check">✓</span></div>
+            <div class="sort-item" data-sort="size"><span>文件大小</span><span class="sort-check">✓</span></div>
+            <div class="sort-item" data-sort="type"><span>文件类型</span><span class="sort-check">✓</span></div>
+          </div>
+        </div>
+        <button class="btn-icon" id="viewToggle" title="切换视图"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></button>
+      </div>
+    </div>
+    <!-- File Table -->
+    <div class="file-table-wrap" id="fileTableWrap">
+      <table class="file-table" id="fileTable">
+        <thead>
+          <tr>
+            <th class="col-check"><input type="checkbox" class="checkbox" id="selectAll"></th>
+            <th class="col-name">文件名</th>
+            <th class="col-size">大小</th>
+            <th class="col-time">修改时间</th>
+            <th class="col-actions"></th>
+          </tr>
+        </thead>
+        <tbody id="fileTableBody">
+        </tbody>
+      </table>
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon">📂</div>
+        <p class="empty-text">暂无文件，点击上传或拖拽文件到此处</p>
+      </div>
+    </div>
+
+    <!-- Transfer Page (Upload) -->
+    <div class="transfer-page" id="uploadPage">
+      <div class="transfer-batch-bar" id="uploadActiveBar">
+        <button class="btn" onclick="showToast('已全部暂停','success')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg> 全部暂停</button>
+        <button class="btn" onclick="showToast('已全部开始','success')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg> 全部开始</button>
+        <button class="btn btn-danger" onclick="showToast('已全部删除','success')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> 全部删除</button>
+      </div>
+      <div class="transfer-batch-bar has-selection" id="uploadDoneBar" style="display:none;">
+        <button class="btn" id="uploadDoneAction" onclick="showToast('已清空全部记录','success')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> 清空全部记录</button>
+      </div>
+      <div class="transfer-tabs">
+        <button class="transfer-tab active" data-tab="uploading" onclick="switchTransferTab('upload', 'uploading', this)">上传中(<span id="uploadingCount">4</span>)</button>
+        <button class="transfer-tab" data-tab="upload-done" onclick="switchTransferTab('upload', 'upload-done', this)">已完成(<span id="uploadDoneCount">5</span>)</button>
+      </div>
+      <div class="transfer-table-wrap" id="uploadingList"></div>
+      <div class="transfer-table-wrap" id="uploadDoneList" style="display:none;"></div>
+    </div>
+
+    <!-- Transfer Page (Download) -->
+    <div class="transfer-page" id="downloadPage">
+      <div class="transfer-batch-bar" id="downloadActiveBar">
+        <button class="btn" onclick="showToast('已全部暂停','success')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg> 全部暂停</button>
+        <button class="btn" onclick="showToast('已全部开始','success')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg> 全部开始</button>
+        <button class="btn btn-danger" onclick="showToast('已全部删除','success')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> 全部删除</button>
+      </div>
+      <div class="transfer-batch-bar has-selection" id="downloadDoneBar" style="display:none;">
+        <button class="btn" id="downloadDoneAction" onclick="showToast('已清空全部记录','success')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> 清空全部记录</button>
+      </div>
+      <div class="transfer-tabs">
+        <button class="transfer-tab active" data-tab="downloading" onclick="switchTransferTab('download', 'downloading', this)">下载中(<span id="downloadingCount">2</span>)</button>
+        <button class="transfer-tab" data-tab="download-done" onclick="switchTransferTab('download', 'download-done', this)">已完成(<span id="downloadDoneCount">5</span>)</button>
+      </div>
+      <div class="transfer-table-wrap" id="downloadingList"></div>
+      <div class="transfer-table-wrap" id="downloadDoneList" style="display:none;"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== Context Menu ===== -->
+<div class="context-menu" id="contextMenu">
+  <div class="ctx-item" data-action="open"><span>打开</span><span class="ctx-shortcut">Enter</span></div>
+  <div class="ctx-item" data-action="download"><span>下载</span><span class="ctx-shortcut">⌘D</span></div>
+  <div class="ctx-divider"></div>
+  <div class="ctx-item" data-action="rename"><span>重命名</span><span class="ctx-shortcut">F2</span></div>
+  <div class="ctx-item" data-action="move"><span>移动到…</span><span class="ctx-shortcut">⌘M</span></div>
+  <div class="ctx-item" data-action="copy"><span>复制到…</span><span class="ctx-shortcut">⌘C</span></div>
+  <div class="ctx-item" data-action="detail"><span>详情</span><span class="ctx-shortcut">⌘I</span></div>
+  <div class="ctx-divider"></div>
+  <div class="ctx-item danger" data-action="delete"><span>删除</span><span class="ctx-shortcut">⌘⌫</span></div>
+</div>
+<!-- ===== File Detail Panel ===== -->
+<div class="detail-panel" id="detailPanel">
+  <div class="detail-header">
+    <span class="detail-title" id="detailFileName">文件详情</span>
+    <button class="modal-close" onclick="closeDetailPanel()">✕</button>
+  </div>
+  <div class="detail-body">
+    <div class="detail-preview" id="detailPreviewIcon">📄</div>
+    <div class="detail-info-list">
+      <div class="detail-info-item"><span class="detail-info-label">文件名</span><span class="detail-info-value" id="detailName">—</span></div>
+      <div class="detail-info-item"><span class="detail-info-label">大小</span><span class="detail-info-value" id="detailSize">—</span></div>
+      <div class="detail-info-item"><span class="detail-info-label">类型</span><span class="detail-info-value" id="detailType">—</span></div>
+      <div class="detail-info-item"><span class="detail-info-label">上传时间</span><span class="detail-info-value" id="detailUploadTime">—</span></div>
+      <div class="detail-info-item"><span class="detail-info-label">修改时间</span><span class="detail-info-value" id="detailModTime">—</span></div>
+      <div class="detail-info-item"><span class="detail-info-label">MD5</span><span class="detail-info-value" id="detailMD5">—</span></div>
+    </div>
+  </div>
+  <div class="detail-actions">
+    <button class="btn btn-primary" style="flex:1" onclick="handleDetailDownload()">下载</button>
+    <button class="btn" style="flex:1" onclick="handleDetailPreview()">预览</button>
+  </div>
+</div>
+
+<!-- ===== Preview Modal ===== -->
+<div class="preview-overlay" id="previewOverlay">
+  <div class="preview-header">
+    <span class="preview-filename" id="previewFileName"></span>
+    <button class="preview-close" onclick="closePreview()">✕</button>
+  </div>
+  <div class="preview-content" id="previewContent"></div>
+</div>
+
+<!-- ===== Delete Confirmation Dialog ===== -->
+<div class="modal-overlay" id="deleteDialog">
+  <div class="modal modal-sm delete-dialog">
+    <div class="modal-header">
+      <span class="modal-title">确认删除</span>
+      <button class="modal-close" onclick="closeDeleteDialog()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="warning-icon">⚠️</div>
+      <p class="warning-text" id="deleteWarningText">确定要删除此文件吗？</p>
+      <p class="warning-sub" id="deleteWarningSub">此操作不可恢复</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeDeleteDialog()">取消</button>
+      <button class="btn btn-danger" id="confirmDeleteBtn" onclick="confirmDelete()">删除</button>
+    </div>
+  </div>
+</div>
+<!-- ===== Storage Distribution Modal ===== -->
+<div class="modal-overlay" id="storageModal">
+  <div class="modal storage-modal">
+    <div class="modal-header">
+      <span class="modal-title">存储空间分布</span>
+      <button class="modal-close" onclick="closeStorageModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="storage-chart">
+        <div class="chart-bar images" style="width:30%"></div>
+        <div class="chart-bar videos" style="width:25%"></div>
+        <div class="chart-bar docs" style="width:20%"></div>
+        <div class="chart-bar others" style="width:25%"></div>
+      </div>
+      <div class="storage-legend">
+        <div class="legend-item"><span class="legend-dot" style="background:#597ef7"></span><span>图片</span><span class="legend-size">1.05 GB</span></div>
+        <div class="legend-item"><span class="legend-dot" style="background:#ff7a45"></span><span>视频</span><span class="legend-size">0.88 GB</span></div>
+        <div class="legend-item"><span class="legend-dot" style="background:#36cfc9"></span><span>文档</span><span class="legend-size">0.70 GB</span></div>
+        <div class="legend-item"><span class="legend-dot" style="background:#bfbfbf"></span><span>其他</span><span class="legend-size">0.87 GB</span></div>
+      </div>
+      <div style="margin-top:20px; padding-top:16px; border-top:1px solid var(--color-border-light);">
+        <div class="detail-info-item" style="margin-bottom:8px"><span class="detail-info-label">已用空间</span><span class="detail-info-value">3.5 GB</span></div>
+        <div class="detail-info-item"><span class="detail-info-label">总配额</span><span class="detail-info-value">10 GB</span></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeStorageModal()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== User Settings Modal ===== -->
+<div class="modal-overlay" id="userSettingsModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">个人设置</span>
+      <button class="modal-close" onclick="closeUserSettings()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="settings-section">
+        <div class="settings-label">头像</div>
+        <div class="settings-avatar">
+          <div class="avatar-lg">U</div>
+          <div>
+            <button class="btn" onclick="showToast('请选择 JPG 或 PNG 格式，不超过 5MB', 'warning')">更换头像</button>
+            <p style="font-size:11px; color:var(--color-text-3); margin-top:4px;">支持 JPG、PNG，不超过 5MB</p>
+          </div>
+        </div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-label">昵称</div>
+        <input class="form-input settings-input" type="text" value="User" placeholder="1-32个字符">
+      </div>
+      <div class="settings-section">
+        <div class="settings-label">修改密码</div>
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <input class="form-input settings-input" type="password" placeholder="当前密码">
+          <input class="form-input settings-input" type="password" placeholder="新密码（8-64位，包含字母和数字）">
+          <input class="form-input settings-input" type="password" placeholder="确认新密码">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer" style="justify-content:space-between;">
+      <button class="btn btn-danger" onclick="handleLogout()">退出登录</button>
+      <div style="display:flex;gap:8px;">
+        <button class="btn" onclick="closeUserSettings()">取消</button>
+        <button class="btn btn-primary" onclick="closeUserSettings(); showToast('设置已保存', 'success')">保存</button>
+      </div>
+    </div>
+  </div>
+</div>
+div>
+<!-- ===== Move/Copy Modal ===== -->
+<div class="modal-overlay" id="moveCopyModal">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <span class="modal-title" id="moveCopyTitle">移动到</span>
+      <button class="modal-close" onclick="closeMoveCopyModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="folder-tree" id="folderTree">
+        <div class="tree-item selected" data-path="/"><span class="tree-item-icon">📁</span> 全部文件</div>
+        <div class="tree-indent">
+          <div class="tree-item" data-path="/工作文档"><span class="tree-item-icon">📁</span> 工作文档</div>
+          <div class="tree-item" data-path="/项目资料"><span class="tree-item-icon">📁</span> 项目资料</div>
+          <div class="tree-item" data-path="/个人照片"><span class="tree-item-icon">📁</span> 个人照片</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeMoveCopyModal()">取消</button>
+      <button class="btn btn-primary" id="moveCopyConfirmBtn" onclick="confirmMoveCopy()">确定</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== New Folder Dialog ===== -->
+<div class="modal-overlay" id="newFolderDialog">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <span class="modal-title">新建文件夹</span>
+      <button class="modal-close" onclick="closeNewFolderDialog()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input class="form-input" type="text" id="newFolderName" placeholder="文件夹名称" value="新建文件夹" autofocus>
+      <p style="font-size:11px; color:var(--color-text-3); margin-top:8px;">不能包含 / \ : * ? " &lt; &gt; | 等特殊字符</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeNewFolderDialog()">取消</button>
+      <button class="btn btn-primary" onclick="confirmNewFolder()">创建</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Rename Dialog ===== -->
+<div class="modal-overlay" id="renameDialog">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <span class="modal-title">重命名</span>
+      <button class="modal-close" onclick="closeRenameDialog()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input class="form-input" type="text" id="renameInput" placeholder="新名称" autofocus>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeRenameDialog()">取消</button>
+      <button class="btn btn-primary" onclick="confirmRename()">确定</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Transfer Panel ===== -->
+<div class="transfer-panel" id="transferPanel">
+  <div class="transfer-header" onclick="toggleTransferPanel()">
+    <span class="transfer-title">传输列表 <span id="transferCount" style="font-weight:400; color:var(--color-text-3); font-size:12px;">(3)</span></span>
+    <div class="transfer-header-actions">
+      <button class="btn-icon" onclick="event.stopPropagation(); toggleTransferPanel()" title="最小化"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+      <button class="btn-icon" onclick="event.stopPropagation(); closeTransferPanel()" title="关闭"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+  </div>
+  <div class="transfer-body" id="transferBody">
+  </div>
+</div>
+<!-- ===== Toast Container ===== -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ===== Drag Overlay ===== -->
+<div class="drag-overlay" id="dragOverlay">
+  <div class="drag-content">
+    <div class="drag-icon">📥</div>
+    <p>释放文件以上传到当前目录</p>
+  </div>
+</div>
+
+<script>
+// ===== Mock Data =====
+const mockFiles = [
+  { name: '工作文档', type: 'folder', size: '—', time: '2025-12-15 14:30', items: 12 },
+  { name: '项目资料', type: 'folder', size: '—', time: '2025-12-10 09:15', items: 8 },
+  { name: '个人照片', type: 'folder', size: '—', time: '2025-11-28 16:45', items: 156 },
+  { name: '产品需求文档 v2.1.pdf', type: 'pdf', size: '2.4 MB', time: '2025-12-14 11:20', md5: 'a1b2c3d4e5f6...', uploadTime: '2025-12-14 10:00' },
+  { name: '系统架构图.png', type: 'image', size: '1.8 MB', time: '2025-12-13 15:30', md5: 'f6e5d4c3b2a1...', uploadTime: '2025-12-13 14:00' },
+  { name: '会议纪要 2025-12.md', type: 'doc', size: '45 KB', time: '2025-12-12 10:00', md5: '1a2b3c4d5e6f...', uploadTime: '2025-12-12 09:30' },
+  { name: '项目进度表.pdf', type: 'pdf', size: '890 KB', time: '2025-12-11 16:45', md5: '6f5e4d3c2b1a...', uploadTime: '2025-12-11 16:00' },
+  { name: '团队合影.jpg', type: 'image', size: '3.2 MB', time: '2025-12-08 12:00', md5: 'b1c2d3e4f5a6...', uploadTime: '2025-12-08 11:30' },
+  { name: 'API 接口文档.pdf', type: 'pdf', size: '1.1 MB', time: '2025-12-05 09:30', md5: 'c2d3e4f5a6b1...', uploadTime: '2025-12-05 09:00' },
+  { name: '数据备份_20251201.zip', type: 'other', size: '156 MB', time: '2025-12-01 03:00', md5: 'd3e4f5a6b1c2...', uploadTime: '2025-12-01 02:30' },
+  { name: '设计稿_首页.png', type: 'image', size: '4.5 MB', time: '2025-11-29 14:20', md5: 'e4f5a6b1c2d3...', uploadTime: '2025-11-29 13:50' },
+  { name: '用户手册.txt', type: 'doc', size: '28 KB', time: '2025-11-25 11:10', md5: 'f5a6b1c2d3e4...', uploadTime: '2025-11-25 10:40' },
+];
+
+const mockTransfers = [
+  { name: '产品需求文档 v3.0.pdf', type: 'upload', progress: 72, size: '3.1 MB', status: 'uploading' },
+  { name: '系统设计图_final.png', type: 'upload', progress: 100, size: '2.8 MB', status: 'done' },
+  { name: '数据导出_20251220.csv', type: 'download', progress: 45, size: '12.5 MB', status: 'downloading' },
+  { name: '旧版备份.zip', type: 'upload', progress: 33, size: '89 MB', status: 'error', errorMsg: '网络连接中断' },
+];
+// ===== State =====
+let currentPath = ['/'];
+let selectedFiles = new Set();
+let currentSort = 'time';
+let isSearchMode = false;
+let contextTarget = null;
+let deleteTarget = null;
+let moveCopyMode = null; // 'move' or 'copy'
+let transferMinimized = false;
+let isLoginMode = true; // true=login, false=register
+
+// ===== File Icon Helper =====
+function getFileIcon(type) {
+  const icons = {
+    folder: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>',
+    image: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
+    doc: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
+    pdf: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
+    other: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>'
+  };
+  return icons[type] || icons.other;
+}
+function getFileIconClass(type) {
+  return ['folder','image','doc','pdf','other'].includes(type) ? type : 'other';
+}
+
+// ===== Render File Table =====
+function renderFileTable(files) {
+  const tbody = document.getElementById('fileTableBody');
+  const empty = document.getElementById('emptyState');
+  if (!files || files.length === 0) {
+    tbody.innerHTML = '';
+    empty.classList.add('show');
+    return;
+  }
+  empty.classList.remove('show');
+  // Sort: folders first, then by current sort
+  const sorted = [...files].sort((a, b) => {
+    if (a.type === 'folder' && b.type !== 'folder') return -1;
+    if (a.type !== 'folder' && b.type === 'folder') return 1;
+    return 0;
+  });
+  tbody.innerHTML = sorted.map((f, i) => `
+    <tr data-index="${i}" data-type="${f.type}" data-name="${f.name}" class="${selectedFiles.has(f.name) ? 'selected' : ''}"
+        oncontextmenu="showContextMenu(event, ${i})" ondblclick="handleDblClick(${i})">
+      <td class="col-check"><input type="checkbox" class="checkbox" ${selectedFiles.has(f.name) ? 'checked' : ''} onchange="toggleSelect('${f.name.replace(/'/g,"\\'")}', this.checked)"></td>
+      <td class="col-name">
+        <div class="file-name-cell">
+          <div class="file-icon ${getFileIconClass(f.type)}">${getFileIcon(f.type)}</div>
+          <div>
+            <div class="file-name-text ${f.type === 'folder' ? 'clickable' : ''}" onclick="${f.type === 'folder' ? `navigateToFolder('${f.name.replace(/'/g,"\\'")}')` : ''}">${f.name}</div>
+            ${f._path ? `<div class="file-path">${f._path}</div>` : ''}
+          </div>
+        </div>
+      </td>
+      <td class="col-size">${f.size}</td>
+      <td class="col-time">${f.time}</td>
+      <td class="col-actions">
+        <div class="row-actions">
+          <button class="row-action-btn" title="下载" onclick="event.stopPropagation(); handleDownload(${i})">⬇</button>
+          <button class="row-action-btn" title="详情" onclick="event.stopPropagation(); showDetail(${i})">ℹ</button>
+          <button class="row-action-btn" title="更多" onclick="event.stopPropagation(); showContextMenu(event, ${i})">⋯</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+  updateSelectAll();
+}
+// ===== Selection =====
+function toggleSelect(name, checked) {
+  if (checked) selectedFiles.add(name); else selectedFiles.delete(name);
+  updateSelectionUI();
+}
+function updateSelectionUI() {
+  document.querySelectorAll('#fileTableBody tr').forEach(tr => {
+    const name = tr.dataset.name;
+    const cb = tr.querySelector('.checkbox');
+    if (selectedFiles.has(name)) { tr.classList.add('selected'); if(cb) cb.checked = true; }
+    else { tr.classList.remove('selected'); if(cb) cb.checked = false; }
+  });
+  const batch = document.getElementById('batchActions');
+  const defaults = document.getElementById('defaultActions');
+  const count = document.getElementById('batchCount');
+  if (selectedFiles.size > 0) {
+    batch.classList.add('show');
+    defaults.classList.add('hide');
+    count.textContent = `已选 ${selectedFiles.size} 项`;
+  } else {
+    batch.classList.remove('show');
+    defaults.classList.remove('hide');
+  }
+  updateSelectAll();
+}
+function updateSelectAll() {
+  const all = document.getElementById('selectAll');
+  const rows = document.querySelectorAll('#fileTableBody tr');
+  if (rows.length === 0) { all.checked = false; all.indeterminate = false; return; }
+  const checkedCount = selectedFiles.size;
+  all.checked = checkedCount === rows.length;
+  all.indeterminate = checkedCount > 0 && checkedCount < rows.length;
+}
+function clearSelection() {
+  selectedFiles.clear();
+  updateSelectionUI();
+}
+document.getElementById('selectAll').addEventListener('change', function() {
+  const rows = document.querySelectorAll('#fileTableBody tr');
+  if (this.checked) {
+    rows.forEach(tr => selectedFiles.add(tr.dataset.name));
+  } else {
+    selectedFiles.clear();
+  }
+  updateSelectionUI();
+});
+
+// ===== Navigation =====
+function navigateToFolder(name) {
+  currentPath.push(name);
+  renderBreadcrumb();
+  // Simulate subfolder content
+  renderFileTable([
+    { name: '子文件夹', type: 'folder', size: '—', time: '2025-12-10 09:00', items: 3 },
+    { name: '文档示例.pdf', type: 'pdf', size: '1.2 MB', time: '2025-12-09 14:30', md5: 'abc123...', uploadTime: '2025-12-09 14:00' },
+    { name: '图片示例.png', type: 'image', size: '800 KB', time: '2025-12-08 11:00', md5: 'def456...', uploadTime: '2025-12-08 10:30' },
+  ]);
+  clearSelection();
+}
+function navigateToPath(index) {
+  currentPath = currentPath.slice(0, index + 1);
+  renderBreadcrumb();
+  if (index === 0) renderFileTable(mockFiles);
+  else navigateToFolder(currentPath[currentPath.length - 1]);
+}
+function renderBreadcrumb() {
+  const bc = document.getElementById('breadcrumb');
+  bc.innerHTML = currentPath.map((p, i) => {
+    const label = i === 0 ? '全部文件' : p;
+    const isCurrent = i === currentPath.length - 1;
+    return `<span class="breadcrumb-item ${isCurrent ? 'current' : ''}" onclick="${isCurrent ? '' : `navigateToPath(${i})`}">${label}</span>${isCurrent ? '' : '<span class="breadcrumb-sep">›</span>'}`;
+  }).join('');
+}
+// ===== Context Menu =====
+function showContextMenu(e, index) {
+  e.preventDefault();
+  e.stopPropagation();
+  contextTarget = index;
+  const menu = document.getElementById('contextMenu');
+  menu.style.left = e.clientX + 'px';
+  menu.style.top = e.clientY + 'px';
+  menu.classList.add('show');
+  // Adjust if off-screen
+  const rect = menu.getBoundingClientRect();
+  if (rect.right > window.innerWidth) menu.style.left = (e.clientX - rect.width) + 'px';
+  if (rect.bottom > window.innerHeight) menu.style.top = (e.clientY - rect.height) + 'px';
+}
+document.addEventListener('click', () => {
+  document.getElementById('contextMenu').classList.remove('show');
+  document.getElementById('sortMenu').classList.remove('show');
+});
+document.querySelectorAll('.ctx-item').forEach(item => {
+  item.addEventListener('click', () => {
+    const action = item.dataset.action;
+    if (contextTarget === null) return;
+    const files = getCurrentFiles();
+    const file = files[contextTarget];
+    switch(action) {
+      case 'open': handleDblClick(contextTarget); break;
+      case 'download': handleDownload(contextTarget); break;
+      case 'rename': showRenameDialog(file); break;
+      case 'move': showMoveCopyModal('move', file); break;
+      case 'copy': showMoveCopyModal('copy', file); break;
+      case 'detail': showDetail(contextTarget); break;
+      case 'delete': showDeleteDialog(file); break;
+    }
+  });
+});
+
+// ===== Sort =====
+document.getElementById('sortBtn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  document.getElementById('sortMenu').classList.toggle('show');
+});
+document.querySelectorAll('.sort-item').forEach(item => {
+  item.addEventListener('click', () => {
+    document.querySelectorAll('.sort-item').forEach(s => s.classList.remove('active'));
+    item.classList.add('active');
+    currentSort = item.dataset.sort;
+    showToast(`已按${item.querySelector('span').textContent}排序`, 'success');
+  });
+});
+
+// ===== Double Click =====
+function handleDblClick(index) {
+  const files = getCurrentFiles();
+  const file = files[index];
+  if (file.type === 'folder') {
+    navigateToFolder(file.name);
+  } else {
+    showPreview(file);
+  }
+}
+
+function getCurrentFiles() {
+  // In search mode return search results, otherwise mock
+  return isSearchMode ? searchResults : (currentPath.length > 1 ? [
+    { name: '子文件夹', type: 'folder', size: '—', time: '2025-12-10 09:00', items: 3 },
+    { name: '文档示例.pdf', type: 'pdf', size: '1.2 MB', time: '2025-12-09 14:30', md5: 'abc123...', uploadTime: '2025-12-09 14:00' },
+    { name: '图片示例.png', type: 'image', size: '800 KB', time: '2025-12-08 11:00', md5: 'def456...', uploadTime: '2025-12-08 10:30' },
+  ] : mockFiles);
+}
+// ===== Detail Panel =====
+function showDetail(index) {
+  const files = getCurrentFiles();
+  const file = files[index];
+  document.getElementById('detailFileName').textContent = file.name;
+  document.getElementById('detailPreviewIcon').innerHTML = getFileIcon(file.type);
+  document.getElementById('detailName').textContent = file.name;
+  document.getElementById('detailSize').textContent = file.size;
+  document.getElementById('detailType').textContent = file.type === 'folder' ? '文件夹' : file.type.toUpperCase();
+  document.getElementById('detailUploadTime').textContent = file.uploadTime || file.time;
+  document.getElementById('detailModTime').textContent = file.time;
+  document.getElementById('detailMD5').textContent = file.md5 || '—';
+  document.getElementById('detailPanel').classList.add('show');
+}
+function closeDetailPanel() { document.getElementById('detailPanel').classList.remove('show'); }
+
+// ===== Preview =====
+function showPreview(file) {
+  const overlay = document.getElementById('previewOverlay');
+  const content = document.getElementById('previewContent');
+  document.getElementById('previewFileName').textContent = file.name;
+  if (file.type === 'image') {
+    content.innerHTML = `<div style="color:#fff; text-align:center;"><div style="font-size:120px; margin-bottom:16px;">🖼️</div><p style="font-size:14px; opacity:0.7;">图片预览: ${file.name}</p><p style="font-size:12px; opacity:0.5; margin-top:8px;">${file.size}</p></div>`;
+  } else if (file.type === 'doc' || file.type === 'pdf') {
+    content.innerHTML = `<div class="doc-preview"><h2 style="margin-bottom:16px; font-size:18px;">${file.name}</h2><p style="color:var(--color-text-3); margin-bottom:24px;">文档预览模式</p><p>这是文档内容的预览区域。在实际应用中，PDF 文件将使用 PDF 渲染器显示，TXT 和 Markdown 文件将直接渲染文本内容。</p><br><p>支持的预览格式：</p><ul style="margin:8px 0 0 20px; line-height:2;"><li>图片：JPG、PNG、GIF、BMP、WebP</li><li>文档：PDF、TXT、Markdown</li></ul><br><p style="color:var(--color-text-3);">文件大小超过 50MB 时将提示下载后查看。</p></div>`;
+  } else {
+    content.innerHTML = `<div class="preview-unsupported"><div class="unsupported-icon">📦</div><p>${file.name}</p><p style="font-size:13px; opacity:0.6;">该文件格式不支持在线预览</p><button class="btn btn-primary" style="margin-top:16px;" onclick="closePreview(); showToast('开始下载: ${file.name}', 'success')">下载文件</button></div>`;
+  }
+  overlay.classList.add('show');
+}
+function closePreview() { document.getElementById('previewOverlay').classList.remove('show'); }
+function handleDetailPreview() {
+  const name = document.getElementById('detailName').textContent;
+  const files = getCurrentFiles();
+  const file = files.find(f => f.name === name);
+  if (file) showPreview(file);
+}
+function handleDetailDownload() {
+  const name = document.getElementById('detailName').textContent;
+  showToast(`开始下载: ${name}`, 'success');
+  showTransferPanel();
+}
+// ===== Delete =====
+function showDeleteDialog(file) {
+  deleteTarget = file;
+  const text = document.getElementById('deleteWarningText');
+  const sub = document.getElementById('deleteWarningSub');
+  if (file.type === 'folder' && file.items > 0) {
+    text.textContent = `确定要删除文件夹「${file.name}」吗？`;
+    sub.textContent = `该文件夹包含 ${file.items} 个项目，删除后将永久丢失，不可恢复。`;
+  } else {
+    text.textContent = `确定要删除「${file.name}」吗？`;
+    sub.textContent = '此操作不可恢复';
+  }
+  document.getElementById('deleteDialog').classList.add('show');
+}
+function closeDeleteDialog() { document.getElementById('deleteDialog').classList.remove('show'); deleteTarget = null; }
+function confirmDelete() {
+  if (deleteTarget) showToast(`已删除: ${deleteTarget.name}`, 'success');
+  closeDeleteDialog();
+}
+
+// ===== Rename =====
+function showRenameDialog(file) {
+  document.getElementById('renameInput').value = file.name;
+  document.getElementById('renameDialog').classList.add('show');
+  setTimeout(() => {
+    const input = document.getElementById('renameInput');
+    input.focus();
+    // Select name without extension
+    const dotIndex = file.name.lastIndexOf('.');
+    input.setSelectionRange(0, dotIndex > 0 ? dotIndex : file.name.length);
+  }, 100);
+}
+function closeRenameDialog() { document.getElementById('renameDialog').classList.remove('show'); }
+function confirmRename() {
+  const newName = document.getElementById('renameInput').value.trim();
+  if (!newName) { showToast('名称不能为空', 'error'); return; }
+  const illegal = /[/\\:*?"<>|]/;
+  if (illegal.test(newName)) { showToast('名称包含非法字符: / \\ : * ? " < > |', 'error'); return; }
+  showToast(`已重命名为: ${newName}`, 'success');
+  closeRenameDialog();
+}
+
+// ===== Move / Copy =====
+function showMoveCopyModal(mode, file) {
+  moveCopyMode = mode;
+  document.getElementById('moveCopyTitle').textContent = mode === 'move' ? '移动到' : '复制到';
+  document.getElementById('moveCopyModal').classList.add('show');
+}
+function closeMoveCopyModal() { document.getElementById('moveCopyModal').classList.remove('show'); }
+function confirmMoveCopy() {
+  const selected = document.querySelector('.tree-item.selected');
+  const path = selected ? selected.dataset.path : '/';
+  showToast(`已${moveCopyMode === 'move' ? '移动' : '复制'}到: ${path}`, 'success');
+  closeMoveCopyModal();
+}
+// Tree item selection
+document.getElementById('folderTree').addEventListener('click', (e) => {
+  const item = e.target.closest('.tree-item');
+  if (!item) return;
+  document.querySelectorAll('.tree-item').forEach(i => i.classList.remove('selected'));
+  item.classList.add('selected');
+});
+
+// ===== New Folder =====
+document.getElementById('newFolderBtn').addEventListener('click', () => {
+  document.getElementById('newFolderName').value = '新建文件夹';
+  document.getElementById('newFolderDialog').classList.add('show');
+  setTimeout(() => document.getElementById('newFolderName').select(), 100);
+});
+function closeNewFolderDialog() { document.getElementById('newFolderDialog').classList.remove('show'); }
+function confirmNewFolder() {
+  const name = document.getElementById('newFolderName').value.trim();
+  if (!name) { showToast('文件夹名称不能为空', 'error'); return; }
+  const illegal = /[/\\:*?"<>|]/;
+  if (illegal.test(name)) { showToast('名称包含非法字符', 'error'); return; }
+  showToast(`已创建文件夹: ${name}`, 'success');
+  closeNewFolderDialog();
+}
+// ===== Search =====
+let searchResults = [];
+document.getElementById('searchInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    const keyword = e.target.value.trim();
+    if (keyword.length < 2) { showToast('请输入至少 2 个字符', 'warning'); return; }
+    isSearchMode = true;
+    searchResults = mockFiles.filter(f => f.name.toLowerCase().includes(keyword.toLowerCase())).map(f => ({
+      ...f, _path: currentPath.length > 1 ? currentPath.join(' / ') : '/ 全部文件'
+    }));
+    document.getElementById('searchKeyword').textContent = `"${keyword}"`;
+    document.getElementById('searchResultCount').textContent = `共 ${searchResults.length} 个结果`;
+    document.getElementById('searchResultsHeader').classList.add('show');
+    document.getElementById('toolbar').style.display = 'none';
+    renderFileTable(searchResults);
+  }
+});
+function closeSearch() {
+  isSearchMode = false;
+  searchResults = [];
+  document.getElementById('searchInput').value = '';
+  document.getElementById('searchResultsHeader').classList.remove('show');
+  document.getElementById('toolbar').style.display = '';
+  renderFileTable(mockFiles);
+}
+
+// ===== Transfer Panel =====
+function renderTransferPanel() {
+  const body = document.getElementById('transferBody');
+  body.innerHTML = mockTransfers.map((t, i) => `
+    <div class="transfer-item">
+      <span class="transfer-item-icon">${t.type === 'upload' ? '⬆️' : '⬇️'}</span>
+      <div class="transfer-item-info">
+        <div class="transfer-item-name">${t.name}</div>
+        <div class="transfer-item-meta">${t.size} · ${t.type === 'upload' ? '上传' : '下载'}</div>
+        ${t.status === 'error' ? `<div class="transfer-status error">失败: ${t.errorMsg}</div>` : t.status === 'done' ? '<div class="transfer-status success">已完成</div>' : ''}
+        ${t.status !== 'done' ? `<div class="transfer-progress"><div class="transfer-progress-bar ${t.status === 'error' ? 'error' : ''}" style="width:${t.progress}%"></div></div>` : ''}
+      </div>
+      <div class="transfer-item-actions">
+        ${t.status === 'error' ? `<button class="transfer-action-btn retry" title="重试" onclick="retryTransfer(${i})">🔄</button>` : ''}
+        ${t.status === 'uploading' || t.status === 'downloading' ? `<button class="transfer-action-btn" title="暂停" onclick="pauseTransfer(${i})">⏸</button>` : ''}
+        ${t.status !== 'done' ? `<button class="transfer-action-btn" title="取消" onclick="cancelTransfer(${i})">✕</button>` : ''}
+      </div>
+    </div>
+  `).join('');
+  document.getElementById('transferCount').textContent = `(${mockTransfers.length})`;
+}
+function showTransferPanel() {
+  document.getElementById('transferPanel').classList.add('show');
+  transferMinimized = false;
+  document.getElementById('transferBody').classList.remove('minimized');
+  renderTransferPanel();
+}
+function closeTransferPanel() { document.getElementById('transferPanel').classList.remove('show'); }
+function toggleTransferPanel() {
+  transferMinimized = !transferMinimized;
+  document.getElementById('transferBody').classList.toggle('minimized', transferMinimized);
+}
+function retryTransfer(index) { showToast('正在重试传输…', 'success'); }
+function pauseTransfer(index) { showToast('已暂停传输', 'warning'); }
+function cancelTransfer(index) { showToast('已取消传输', 'success'); }
+document.getElementById('transferBtn').addEventListener('click', () => {
+  const panel = document.getElementById('transferPanel');
+  if (panel.classList.contains('show')) closeTransferPanel();
+  else showTransferPanel();
+});
+// ===== Toast =====
+function showToast(message, type = 'success') {
+  const container = document.getElementById('toastContainer');
+  const icons = { success: '✅', error: '❌', warning: '⚠️' };
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.innerHTML = `<span class="toast-icon">${icons[type] || '💬'}</span><span class="toast-message">${message}</span><button class="toast-close" onclick="this.parentElement.remove()">✕</button>`;
+  container.appendChild(toast);
+  setTimeout(() => { if (toast.parentElement) toast.remove(); }, 3000);
+}
+
+// ===== Storage Modal =====
+function closeStorageModal() { document.getElementById('storageModal').classList.remove('show'); }
+
+// ===== User Settings =====
+document.getElementById('sidebarUser').addEventListener('click', () => {
+  document.getElementById('userSettingsModal').classList.add('show');
+});
+function closeUserSettings() { document.getElementById('userSettingsModal').classList.remove('show'); }
+function handleLogout() {
+  closeUserSettings();
+  document.getElementById('mainLayout').classList.remove('show');
+  document.getElementById('loginPage').style.display = '';
+  document.getElementById('loginUsername').value = '';
+  document.getElementById('loginPassword').value = '';
+  document.getElementById('loginError').classList.remove('show');
+  showToast('已退出登录', 'success');
+}
+
+// ===== Upload =====
+document.getElementById('uploadBtn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  const menu = document.getElementById('uploadMenu');
+  menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+});
+document.getElementById('uploadFileBtn').addEventListener('click', () => {
+  document.getElementById('uploadMenu').style.display = 'none';
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.multiple = true;
+  input.onchange = () => {
+    if (input.files.length > 0) {
+      showToast(`开始上传 ${input.files.length} 个文件`, 'success');
+      showTransferPanel();
+    }
+  };
+  input.click();
+});
+document.getElementById('uploadFolderBtn').addEventListener('click', () => {
+  document.getElementById('uploadMenu').style.display = 'none';
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.webkitdirectory = true;
+  input.onchange = () => {
+    if (input.files.length > 0) {
+      showToast(`开始上传文件夹（${input.files.length} 个文件）`, 'success');
+      showTransferPanel();
+    }
+  };
+  input.click();
+});
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.upload-dropdown')) {
+    document.getElementById('uploadMenu').style.display = 'none';
+  }
+});
+
+// ===== Drag & Drop =====
+let dragCounter = 0;
+document.addEventListener('dragenter', (e) => {
+  e.preventDefault();
+  dragCounter++;
+  if (document.getElementById('mainLayout').classList.contains('show')) {
+    document.getElementById('dragOverlay').classList.add('show');
+  }
+});
+document.addEventListener('dragleave', (e) => {
+  e.preventDefault();
+  dragCounter--;
+  if (dragCounter === 0) document.getElementById('dragOverlay').classList.remove('show');
+});
+document.addEventListener('dragover', (e) => e.preventDefault());
+document.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dragCounter = 0;
+  document.getElementById('dragOverlay').classList.remove('show');
+  if (e.dataTransfer.files.length > 0) {
+    showToast(`开始上传 ${e.dataTransfer.files.length} 个文件到当前目录`, 'success');
+    showTransferPanel();
+  }
+});
+
+// ===== Batch Actions =====
+function handleBatchDownload() { showToast(`开始下载 ${selectedFiles.size} 个文件`, 'success'); showTransferPanel(); clearSelection(); }
+function handleBatchMove() { showMoveCopyModal('move'); }
+function handleBatchCopy() { showMoveCopyModal('copy'); }
+function handleBatchDelete() {
+  deleteTarget = { name: `${selectedFiles.size} 个文件`, type: 'batch', items: selectedFiles.size };
+  document.getElementById('deleteWarningText').textContent = `确定要删除选中的 ${selectedFiles.size} 个文件吗？`;
+  document.getElementById('deleteWarningSub').textContent = '此操作不可恢复';
+  document.getElementById('deleteDialog').classList.add('show');
+}
+function handleDownload(index) {
+  const files = getCurrentFiles();
+  showToast(`开始下载: ${files[index].name}`, 'success');
+  showTransferPanel();
+}
+// ===== Login / Register =====
+document.querySelectorAll('.login-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.login-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    isLoginMode = tab.dataset.tab === 'login';
+    document.querySelectorAll('.register-fields').forEach(f => f.classList.toggle('show', !isLoginMode));
+    document.getElementById('loginOptions').style.display = isLoginMode ? '' : 'none';
+    document.getElementById('loginBtn').textContent = isLoginMode ? '登录' : '注册';
+    document.getElementById('loginError').classList.remove('show');
+  });
+});
+
+document.getElementById('loginBtn').addEventListener('click', () => {
+  const username = document.getElementById('loginUsername').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const errorEl = document.getElementById('loginError');
+
+  if (!username || !password) {
+    errorEl.textContent = '请输入用户名和密码';
+    errorEl.classList.add('show');
+    return;
+  }
+
+  if (!isLoginMode) {
+    // Register validation
+    if (username.length < 3 || username.length > 32) {
+      errorEl.textContent = '用户名长度需在 3-32 个字符之间';
+      errorEl.classList.add('show'); return;
+    }
+    if (password.length < 8 || !/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) {
+      errorEl.textContent = '密码需 8-64 位，且包含字母和数字';
+      errorEl.classList.add('show'); return;
+    }
+    const email = document.querySelector('#registerEmail input').value;
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errorEl.textContent = '请输入有效的邮箱地址';
+      errorEl.classList.add('show'); return;
+    }
+    const confirm = document.querySelector('#registerConfirm input').value;
+    if (password !== confirm) {
+      errorEl.textContent = '两次输入的密码不一致';
+      errorEl.classList.add('show'); return;
+    }
+  }
+
+  errorEl.classList.remove('show');
+  // Simulate login success
+  document.getElementById('loginPage').style.display = 'none';
+  document.getElementById('mainLayout').classList.add('show');
+  document.getElementById('userName').textContent = username;
+  document.getElementById('userAvatar').textContent = username.charAt(0).toUpperCase();
+  renderFileTable(mockFiles);
+  renderTransferPanel();
+});
+
+// ===== Keyboard Shortcuts =====
+document.addEventListener('keydown', (e) => {
+  // Escape to close overlays
+  if (e.key === 'Escape') {
+    closePreview();
+    closeDetailPanel();
+    document.getElementById('contextMenu').classList.remove('show');
+    document.getElementById('sortMenu').classList.remove('show');
+  }
+});
+
+// ===== Close modals on overlay click =====
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) overlay.classList.remove('show');
+  });
+});
+
+// ===== Sidebar Menu Navigation =====
+document.querySelectorAll('.menu-item').forEach(item => {
+  item.addEventListener('click', () => {
+    document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+    item.classList.add('active');
+    const page = item.dataset.page;
+    // Hide all pages
+    document.getElementById('fileTableWrap').style.display = 'none';
+    document.getElementById('uploadPage').classList.remove('show');
+    document.getElementById('downloadPage').classList.remove('show');
+    document.querySelector('.header').style.display = '';
+    document.getElementById('toolbar').style.display = '';
+    if (page === 'all') {
+      document.getElementById('fileTableWrap').style.display = '';
+      document.querySelector('.header').style.display = '';
+      document.getElementById('toolbar').style.display = '';
+    } else if (page === 'upload-list') {
+      document.querySelector('.header').style.display = 'none';
+      document.getElementById('toolbar').style.display = 'none';
+      document.getElementById('uploadPage').classList.add('show');
+      renderUploadPage();
+    } else if (page === 'download-list') {
+      document.querySelector('.header').style.display = 'none';
+      document.getElementById('toolbar').style.display = 'none';
+      document.getElementById('downloadPage').classList.add('show');
+      renderDownloadPage();
+    }
+  });
+});
+
+// ===== Transfer Page Data =====
+const mockUploading = [
+  { name: '产品需求文档 v3.0.pdf', size: '3.1 MB', progress: 72, status: 'uploading', path: '/工作文档' },
+  { name: '旧版备份.zip', size: '89 MB', progress: 33, status: 'error', errorMsg: '网络连接中断', path: '/' },
+  { name: '系统架构图_v2.png', size: '4.2 MB', progress: 15, status: 'uploading', path: '/项目资料/设计稿' },
+  { name: '周报_20251220.docx', size: '156 KB', progress: 88, status: 'uploading', path: '/工作文档' },
+];
+const mockUploadDone = [
+  { name: '系统设计图_final.png', size: '2.8 MB', time: '2025-12-20 14:30', path: '/项目资料' },
+  { name: '会议纪要.md', size: '45 KB', time: '2025-12-20 11:20', path: '/工作文档' },
+  { name: '团队合影_年会.jpg', size: '5.1 MB', time: '2025-12-19 18:00', path: '/个人照片' },
+  { name: 'Q4数据报告.xlsx', size: '320 KB', time: '2025-12-19 15:45', path: '/工作文档' },
+  { name: '接口文档_v3.pdf', size: '1.8 MB', time: '2025-12-18 09:30', path: '/项目资料/文档' },
+];
+const mockDownloading = [
+  { name: '数据导出_20251220.csv', size: '12.5 MB', progress: 45, status: 'downloading', path: '/' },
+  { name: '客户资料汇总.xlsx', size: '8.3 MB', progress: 67, status: 'downloading', path: '/工作文档' },
+];
+const mockDownloadDone = [
+  { name: 'API文档_v2.pdf', size: '1.1 MB', time: '2025-12-19 16:00', path: '/项目资料' },
+  { name: '团队合影.jpg', size: '3.2 MB', time: '2025-12-18 10:30', path: '/个人照片' },
+  { name: '项目进度表.xlsx', size: '890 KB', time: '2025-12-17 09:15', path: '/工作文档' },
+  { name: '设计规范_v1.pdf', size: '2.4 MB', time: '2025-12-16 14:20', path: '/项目资料/设计稿' },
+  { name: '备份_20251215.zip', size: '156 MB', time: '2025-12-15 03:00', path: '/' },
+];
+
+function getFileTypeFromName(name) {
+  const ext = name.split('.').pop().toLowerCase();
+  if (['jpg','jpeg','png','gif','bmp','webp','svg'].includes(ext)) return 'image';
+  if (['pdf'].includes(ext)) return 'pdf';
+  if (['doc','docx','txt','md','xls','xlsx','ppt','pptx','csv'].includes(ext)) return 'doc';
+  return 'other';
+}
+
+function renderTransferBreadcrumb() {
+  return `<div class="toolbar" style="padding:12px 0;"><div class="breadcrumb"><span class="breadcrumb-item" style="cursor:pointer;color:var(--color-text-3);">全部文件</span><span class="breadcrumb-sep">›</span><span class="breadcrumb-item" style="cursor:pointer;color:var(--color-text-3);">工作文档</span><span class="breadcrumb-sep">›</span><span class="breadcrumb-item" style="cursor:pointer;color:var(--color-text-3);">子文件夹</span><span class="breadcrumb-sep">›</span><span class="breadcrumb-item current">子文件夹</span></div></div>`;
+}
+
+function renderTransferListItems(items, type, isActive) {
+  const emptyIconSvg = type === 'upload'
+    ? '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:0.3;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>'
+    : '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:0.3;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
+  const emptyText = isActive
+    ? `暂无正在${type === 'upload' ? '上传' : '下载'}的文件`
+    : `暂无已完成的${type === 'upload' ? '上传' : '下载'}文件`;
+  const bc = renderTransferBreadcrumb();
+
+  if (isActive) {
+    let html = bc + `<table class="file-table"><thead><tr>
+      <th class="col-check"><input type="checkbox" class="checkbox"></th>
+      <th class="col-name">文件名</th>
+      <th class="col-size">大小</th>
+      <th class="col-status" style="width:120px;">状态</th>
+      <th class="col-actions">操作</th>
+    </tr></thead><tbody>`;
+    if (items.length === 0) {
+      html += `</tbody></table><div class="transfer-empty"><div class="transfer-empty-icon">${emptyIconSvg}</div><p>${emptyText}</p></div>`;
+      return html;
+    }
+    items.forEach((t) => {
+      const ft = getFileTypeFromName(t.name);
+      const isError = t.status === 'error';
+      const statusText = isError ? t.errorMsg : t.progress + '%';
+      const statusClass = isError ? 'error' : 'active';
+      const actions = isError
+        ? `<button class="row-action-btn" title="重试" onclick="showToast('正在重试…','success')">🔄</button>`
+        : `<button class="row-action-btn" title="暂停">⏸</button>`;
+      html += `<tr>
+        <td class="col-check"><input type="checkbox" class="checkbox"></td>
+        <td class="col-name"><div class="file-name-cell"><div class="file-icon ${getFileIconClass(ft)}">${getFileIcon(ft)}</div><div class="file-name-text">${t.name}</div></div></td>
+        <td class="col-size">${t.size}</td>
+        <td class="col-status"><span class="transfer-table-status-text ${statusClass}">${statusText}</span></td>
+        <td class="col-actions"><div class="row-actions" style="display:flex;">${actions}<button class="row-action-btn" title="取消" onclick="showToast('已取消','success')">✕</button></div></td>
+      </tr>`;
+    });
+    html += '</tbody></table>';
+    return html;
+  } else {
+    let html = bc + `<table class="file-table"><thead><tr>
+      <th class="col-check"><input type="checkbox" class="checkbox"></th>
+      <th class="col-name">文件名</th>
+      <th class="col-size">大小</th>
+      <th class="col-time">完成时间</th>
+      <th class="col-actions">操作</th>
+    </tr></thead><tbody>`;
+    if (items.length === 0) {
+      html += `</tbody></table><div class="transfer-empty"><div class="transfer-empty-icon">${emptyIconSvg}</div><p>${emptyText}</p></div>`;
+      return html;
+    }
+    items.forEach((t) => {
+      const ft = getFileTypeFromName(t.name);
+      html += `<tr>
+        <td class="col-check"><input type="checkbox" class="checkbox"></td>
+        <td class="col-name"><div class="file-name-cell"><div class="file-icon ${getFileIconClass(ft)}">${getFileIcon(ft)}</div><div class="file-name-text">${t.name}</div></div></td>
+        <td class="col-size">${t.size}</td>
+        <td class="col-time">${t.time || '—'}</td>
+        <td class="col-actions"><button class="btn-text" style="font-size:12px;color:var(--color-text-3);" onclick="showToast('已清空','success')">清空</button></td>
+      </tr>`;
+    });
+    html += '</tbody></table>';
+    return html;
+  }
+}
+
+function renderUploadPage() {
+  document.getElementById('uploadingList').innerHTML = renderTransferListItems(mockUploading, 'upload', true);
+  document.getElementById('uploadDoneList').innerHTML = renderTransferListItems(mockUploadDone, 'upload', false);
+}
+function renderDownloadPage() {
+  document.getElementById('downloadingList').innerHTML = renderTransferListItems(mockDownloading, 'download', true);
+  document.getElementById('downloadDoneList').innerHTML = renderTransferListItems(mockDownloadDone, 'download', false);
+}
+
+function switchTransferTab(type, tab, el) {
+  const parent = el.closest('.transfer-page');
+  parent.querySelectorAll('.transfer-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  parent.querySelectorAll('.transfer-table-wrap').forEach(l => l.style.display = 'none');
+  const isDone = (tab === 'upload-done' || tab === 'download-done');
+  const prefix = type === 'upload' ? 'upload' : 'download';
+  document.getElementById(prefix + 'ActiveBar').style.display = isDone ? 'none' : '';
+  document.getElementById(prefix + 'DoneBar').style.display = isDone ? '' : 'none';
+  if (type === 'upload') {
+    document.getElementById(tab === 'uploading' ? 'uploadingList' : 'uploadDoneList').style.display = '';
+  } else {
+    document.getElementById(tab === 'downloading' ? 'downloadingList' : 'downloadDoneList').style.display = '';
+  }
+}
+
+// ===== Transfer Table Checkbox Selection =====
+function updateTransferBatchBar(pageEl) {
+  const prefix = pageEl.id === 'uploadPage' ? 'upload' : 'download';
+  // Check which tab is active
+  const activeTab = pageEl.querySelector('.transfer-tab.active');
+  const isDone = activeTab && (activeTab.dataset.tab === 'upload-done' || activeTab.dataset.tab === 'download-done');
+
+  if (isDone) {
+    // Done tab: toggle button text between 清空全部记录 / 清除记录
+    const actionBtn = document.getElementById(prefix + 'DoneAction');
+    const doneList = document.getElementById(prefix === 'upload' ? 'uploadDoneList' : 'downloadDoneList');
+    const checked = doneList.querySelectorAll('tbody .checkbox:checked').length;
+    if (checked > 0) {
+      actionBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> 清除记录';
+    } else {
+      actionBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> 清空全部记录';
+    }
+  } else {
+    // Active tab: toggle has-selection on active bar
+    const bar = document.getElementById(prefix + 'ActiveBar');
+    const checked = pageEl.querySelectorAll('.file-table tbody .checkbox:checked').length;
+    if (checked > 0) bar.classList.add('has-selection');
+    else bar.classList.remove('has-selection');
+  }
+}
+document.addEventListener('change', (e) => {
+  const cb = e.target;
+  if (!cb.classList.contains('checkbox')) return;
+  const page = cb.closest('.transfer-page');
+  if (!page) return;
+  const th = cb.closest('th');
+  if (th) {
+    const wrap = cb.closest('.transfer-table-wrap') || cb.closest('table').parentElement;
+    wrap.querySelectorAll('tbody .checkbox').forEach(c => c.checked = cb.checked);
+  }
+  updateTransferBatchBar(page);
+});
+
+// ===== Init =====
+// Show login page by default
+</script>
+</body>
+</html>
